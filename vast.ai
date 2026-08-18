@@ -1,0 +1,2 @@
+echo "YOLO" >> /tmp/yolo.txt
+ollama pull qwen3.8:27b
