@@ -19,8 +19,8 @@ done
 echo "Ollama server is up."
 
 # Pull the base model and build the custom Leetify variant with a 256k context.
-ollama pull qwen3.8:27b
-printf 'FROM qwen3.8:27b\nPARAMETER num_ctx 262144\n' > /tmp/Modelfile
+ollama pull qwen3.8:27b-mtp-q8_0
+printf 'FROM qwen3.8:27b-mtp-q8_0\nPARAMETER num_ctx 262144\n' > /tmp/Modelfile
 ollama create qwen3.8:27b_leetify -f /tmp/Modelfile
 
 # If we started a temporary server just for provisioning, stop it so the
