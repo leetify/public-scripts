@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euo pipefail
+
+echo "YOLO" >> /tmp/yolo.txt
+
+# The vast.ai ollama image may already run a server via its entrypoint.
+# Start one only if nothing is answering yet, and remember that we own it.
+started_server=0
+if ! ollama ls >/dev/null 2>&1; then
+    ollama serve >/tmp/ollama-provision.log 2>&1 &
+    server_pid=$!
+    started_server=1
+fi
+
+echo "Waiting for ollama server..."
+until ollama ls >/dev/null 2>&1; do
+    sleep 1
+done
+echo "Ollama server is up."
+
+# Pull the base model and build the custom Leetify variant with a 256k context.
+ollama pull qwen3.8:27b
+printf 'FROM qwen3.8:27b\nPARAMETER num_ctx 262144\n' > /tmp/Modelfile
+ollama create qwen3.8:27b_leetify -f /tmp/Modelfile
+
+# If we started a temporary server just for provisioning, stop it so the
+# platform's own supervisor stays the single owner of the runtime server.
+if [ "$started_server" -eq 1 ]; then
+    echo "Stopping provisioning server (pid $server_pid)..."
+    kill "$server_pid"
+    wait "$server_pid" 2>/dev/null || true
+fi
+
+echo "Provisioning complete."
